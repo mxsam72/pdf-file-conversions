@@ -1,0 +1,20 @@
+# Only source, generic docs and explicit audit summaries belong in Git.
+__pycache__/
+*.pyc
+.venv/
+.converter.lock
+.env
+.env.*
+work/
+output-results/
+previous-results/
+ORIGINALS/
+PILOT PDFs/
+WEBSITE PDFs/
+REVIEW/
+REPORTS/
+PILOT_APPROVAL.json
+*.pdf
+*.zip
+*.log
+*.writing
