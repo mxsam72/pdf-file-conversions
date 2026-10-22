@@ -33,3 +33,5 @@ Actual six-file setup results are recorded separately in the result Release and 
 ## Interpreting outcomes
 
 The HTML/CSV/JSON report is authoritative for individual documents. A run with REVIEW files still publishes its available report and candidates, then exits with a nonzero status so Actions does not present it as a clean success. An input download, metadata preservation, or technical failure can stop conversion before a result Release exists. Inspect the failing step's log, correct the cause, and use a new run or input Release; do not treat missing outputs as PASS.
+
+Use `main` for conversion runs and wait for the result Release before editing workflow YAML. GitHub can reject automatic Release creation when a run's workflow files differ from the current default branch. If that happens, run the finalized `main` version again. A personal access token is not needed. See [GitHub's Release API documentation](https://docs.github.com/en/rest/releases/releases).

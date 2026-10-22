@@ -2,6 +2,8 @@
 
 Convert a small set of large PDFs in GitHub Actions, then download the PDFs and a validation report. The browser workflow installs no Python, command line tools, or converter software on the operator's Windows PC.
 
+**Initial six-file test:** [download the converted PDFs and report](https://github.com/mxsam72/pdf-file-conversions/releases/tag/results-39840595561-1) · [successful GitHub run](https://github.com/mxsam72/pdf-file-conversions/actions/runs/39840595561) · [recorded test details](SETUP_TEST.md). All six passed; physical device review remains pending.
+
 The converter makes arrows and other supported annotations ordinary PDF page content. It reduces oversized photographs while preserving selectable text, vector drawings, page geometry, hyperlinks, and interactive form fields. It never renders entire pages into replacement images and never overwrites uploaded masters.
 
 ## Run from a browser
