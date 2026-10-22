@@ -36,7 +36,8 @@ jobs:
         with:
           python-version: '3.12'
       - name: Install pinned conversion libraries on the GitHub runner
-        run: python -m pip install --only-binary=:all: -r requirements.txt
+        run: |
+          python -m pip install --only-binary=:all: -r requirements.txt
       - name: Run functional and upload boundary tests
         run: python -m unittest discover -p 'test_*.py' -v
 
@@ -55,7 +56,8 @@ jobs:
         with:
           python-version: '3.12'
       - name: Install pinned conversion libraries on the GitHub runner
-        run: python -m pip install --only-binary=:all: -r requirements.txt
+        run: |
+          python -m pip install --only-binary=:all: -r requirements.txt
       - name: Convert the pilot, validate it, and publish the result ZIP
         env:
           GH_TOKEN: ${{ github.token }}
