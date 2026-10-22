@@ -7,14 +7,14 @@ The converter makes arrows and other supported annotations ordinary PDF page con
 ## Run from a browser
 
 1. Prepare a ZIP containing only the PDF files you intend to publish. Preserve their original filenames. An optional `manifest.json` may contain checksums. Keep each ZIP below 2,000,000,000 bytes. Do not include unrelated documents or folders.
-2. Open this repository's **Releases → Draft a new release**. Create a tag beginning with `inputs-`, such as `inputs-test-001`, and attach the ZIP as **`test-inputs.zip`**. Publish the Release. Publishing an `inputs-` Release starts the pilot automatically.
-3. Open **Actions → Convert PDFs** to watch the run. Alternatively, select **Run workflow**, supply the existing input Release tag and exact ZIP asset name, and start it manually.
+2. Open this repository's **Releases → Draft a new release**. Create a tag such as `inputs-test-001`, attach the ZIP as **`test-inputs.zip`**, and publish the Release.
+3. Open **Actions → Convert PDFs → Run workflow**, use the `main` branch, supply the input Release tag and exact ZIP asset name, and press **Run workflow**. For the initial split upload, use `inputs-test-001` and `test-inputs.json`.
 4. When the job finishes, open the new **PDF pilot results** Release. Download `pdf-conversion-results.zip` and `SHA256SUMS.txt`. Extract the ZIP using Windows File Explorer.
 5. Open `REPORTS / run folder / OPEN REPORT.html`. Use the comparison pictures and inspect the actual files under `PILOT PDFs`. Keep files under `REVIEW` out of the website.
 
 The initial setup test uses six supplied parts PDFs. This demonstrates the GitHub route. It does **not** approve a full production batch. The browser workflow deliberately runs a pilot of at most 15 PDFs; it does not automatically process all 250 files. A representative pilot needs at least 10 distinct passing PDFs, including installation documents, followed by the physical viewer checks in [VALIDATION.md](VALIDATION.md). The engine retains its bulk approval gate for the later production phase.
 
-Input Releases and result Releases are public and remain available until removed. A result Release does not trigger another conversion. A code push runs the synthetic tests only. No website is updated by this project.
+Input Releases and result Releases are public and remain available until removed. Uploading or publishing files does not start conversion; pressing **Run workflow** starts it. A code push runs the synthetic tests only. No website is updated by this project.
 
 For the initial large-file transfer, the exact same input ZIP may be split into smaller parts. In that case the Release contains `test-inputs.json` plus numbered `test-inputs.zip.part-*` assets. The workflow automatically finds this descriptor when `test-inputs.zip` is absent, downloads only same-repository assets, verifies each part, rejoins the unchanged ZIP in the descriptor's order, and verifies its full checksum before extraction. Normal browser uploads can continue to use a single ZIP.
 

@@ -11,11 +11,9 @@ on:
         required: true
         default: inputs-test-001
       asset_name:
-        description: 'Exact ZIP asset filename'
+        description: 'Exact ZIP or split descriptor asset filename'
         required: true
         default: test-inputs.zip
-  release:
-    types: [published]
 
 permissions:
   contents: read
@@ -43,7 +41,7 @@ jobs:
 
   pilot:
     needs: tests
-    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'release' && startsWith(github.event.release.tag_name, 'inputs-'))
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-24.04
     timeout-minutes: 90
     permissions:
@@ -61,7 +59,7 @@ jobs:
       - name: Convert the pilot, validate it, and publish the result ZIP
         env:
           GH_TOKEN: ${{ github.token }}
-          INPUT_TAG: ${{ inputs.input_tag || github.event.release.tag_name }}
-          INPUT_ASSET: ${{ inputs.asset_name || 'test-inputs.zip' }}
+          INPUT_TAG: ${{ inputs.input_tag }}
+          INPUT_ASSET: ${{ inputs.asset_name }}
           PYTHONUNBUFFERED: '1'
         run: python cloud_run.py --publish
