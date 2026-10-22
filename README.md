@@ -25,9 +25,10 @@ For the initial large-file transfer, the exact same input ZIP may be split into 
 | Existing web browser | Operator's PC | Upload a ZIP, start/monitor Actions, download results |
 | Windows File Explorer / existing PDF viewer | Operator's PC | Extract the download and inspect PDFs |
 | GitHub-hosted Ubuntu 24.04 runner | GitHub | Temporary computer that runs the job |
+| Git and the Node.js runtime used by official Actions | GitHub runner | Check out source files and run GitHub's setup actions |
 | Python 3.12, selected by `actions/setup-python` | GitHub runner | Execute the converter and checks |
 | pip | GitHub runner | Download the three pinned Python packages from PyPI |
-| PyMuPDF 1.26.6 | GitHub runner | Read/write PDFs, flatten supported annotations, inspect PDF structure, render comparisons |
+| PyMuPDF 1.26.6, including its native MuPDF engine | GitHub runner | Read/write PDFs, flatten supported annotations, inspect PDF structure, render comparisons |
 | Pillow 12.3.0 | GitHub runner | Resize/re-encode eligible photos; create comparison pictures |
 | NumPy 2.3.5 | GitHub runner | Compare pixels and measure visual changes |
 | GitHub's temporary `GITHUB_TOKEN` | GitHub runner | Read this repository's inputs and create its result Release |

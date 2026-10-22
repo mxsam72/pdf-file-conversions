@@ -5,7 +5,7 @@ The browser workflow uses Python 3.12 on GitHub's hosted Ubuntu 24.04 runner. Th
 | Package | Version | Role | License family |
 |---|---|---|---|
 | PyMuPDF | 1.26.6 | PDF operations, rendering and analysis | AGPL-3.0 or a separately obtained commercial license |
-| Pillow | 12.3.0 | Photo processing and comparison pictures | HPND |
+| Pillow | 12.3.0 | Photo processing and comparison pictures | MIT-CMU |
 | NumPy | 2.3.5 | Numerical/pixel comparison | BSD-3-Clause |
 
 The source project uses AGPL-3.0 in alignment with the open-source PyMuPDF option. See the complete `LICENSE` and the packages' own notices. This license applies to the converter code; uploading or processing a PDF does not change that PDF's ownership or license.
