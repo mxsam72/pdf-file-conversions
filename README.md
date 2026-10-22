@@ -16,6 +16,8 @@ The initial setup test uses six supplied parts PDFs. This demonstrates the GitHu
 
 Input Releases and result Releases are public and remain available until removed. A result Release does not trigger another conversion. A code push runs the synthetic tests only. No website is updated by this project.
 
+For the initial large-file transfer, the exact same input ZIP may be split into smaller parts. In that case the Release contains `test-inputs.json` plus numbered `test-inputs.zip.part-*` assets. The workflow automatically finds this descriptor when `test-inputs.zip` is absent, downloads only same-repository assets, verifies each part, rejoins the unchanged ZIP in the descriptor's order, and verifies its full checksum before extraction. Normal browser uploads can continue to use a single ZIP.
+
 ## What runs, where, and why
 
 | Component | Where it runs | Purpose |

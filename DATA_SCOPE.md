@@ -25,4 +25,6 @@ The repository does not connect to company drives, read arbitrary folders on the
 
 PDFs and ZIPs are excluded from git to keep large documents out of source history. They are stored as Release assets. Release downloads remain public until explicitly removed. GitHub also retains workflow logs according to repository/account settings. The temporary hosted runner and its working copies are disposed of by GitHub after the job. Keep your own unchanged master PDFs outside this repository.
 
+Split transfer parts, when used, contain only the bytes of the same approved input ZIP. Their descriptor contains generic part filenames, byte counts, and SHA-256 checksums. The runner verifies each part and the reassembled archive before opening it. The split format adds no other source data.
+
 Future uploads should be checked for conventional metadata **before** publishing the input Release if that metadata must never appear publicly. The workflow's own metadata cleanup occurs after the public input upload and cannot retroactively make an original upload private.

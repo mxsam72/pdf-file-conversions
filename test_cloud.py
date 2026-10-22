@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 import zipfile
 
 import pymupdf as fitz
@@ -60,6 +61,40 @@ class CloudTests(unittest.TestCase):
         with zipfile.ZipFile(archive) as z:
             self.assertEqual(set(z.namelist()), {"RUN_INFO.json", "START_HERE.txt",
                 "REPORTS/run/summary.json", "PILOT PDFs/run/sample.pdf"})
+
+    def test_split_descriptor_requires_bounded_unique_parts_and_checksums(self):
+        descriptor = {"schema": 1, "archive_bytes": 12, "archive_sha256": "a" * 64,
+                      "parts": [{"name": "input.part-001", "bytes": 12, "sha256": "b" * 64}]}
+        self.assertEqual(len(cloud.validate_parts(descriptor)), 1)
+        descriptor["parts"].append(dict(descriptor["parts"][0]))
+        with self.assertRaises(ValueError):
+            cloud.validate_parts(descriptor)
+        descriptor["parts"] = [{"name": "../outside", "bytes": 12, "sha256": "b" * 64}]
+        with self.assertRaises(ValueError):
+            cloud.validate_parts(descriptor)
+
+    def test_split_download_reassembles_and_rejects_changed_bytes(self):
+        import hashlib
+        data = b"synthetic archive bytes" * 100
+        blocks = [data[:1000], data[1000:]]
+        records = [{"name": f"input.part-{i}", "bytes": len(block),
+                    "sha256": hashlib.sha256(block).hexdigest()} for i, block in enumerate(blocks)]
+        descriptor = {"schema": 1, "archive_bytes": len(data),
+                      "archive_sha256": hashlib.sha256(data).hexdigest(), "parts": records}
+        payloads = {record["name"]: block for record, block in zip(records, blocks)}
+        payloads["test-inputs.json"] = json.dumps(descriptor).encode()
+        release = {"assets": [{"id": i, "name": name, "size": len(value)}
+                              for i, (name, value) in enumerate(payloads.items())]}
+        def fake_transfer(repository, asset, destination):
+            Path(destination).write_bytes(payloads[asset["name"]])
+        with patch.object(cloud, "api_json", return_value=release), patch.object(cloud, "transfer_asset", side_effect=fake_transfer):
+            output = self.root / "download.zip"
+            info = cloud.download_input("owner/repo", "inputs-test", "test-inputs.zip", "", output)
+            self.assertEqual(output.read_bytes(), data)
+            self.assertEqual(info["asset_name"], "test-inputs.json")
+            payloads["input.part-0"] = b"changed"
+            with self.assertRaisesRegex(ValueError, "checksum"):
+                cloud.download_input("owner/repo", "inputs-test", "test-inputs.zip", "", self.root / "bad.zip")
 
     def test_metadata_copy_preserves_visible_annotation_and_source(self):
         source, clean = self.root / "source.pdf", self.root / "clean.pdf"

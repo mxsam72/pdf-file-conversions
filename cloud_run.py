@@ -95,10 +95,69 @@ def download_input(repository, tag, asset_name, token, destination):
     if not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", repository):
         raise ValueError("Invalid repository name")
     release = api_json(f"/repos/{repository}/releases/tags/{urllib.parse.quote(tag, safe='')}", token)
+    if len(release["assets"]) >= 30:
+        listed = []
+        for page in range(1, 11):
+            group = api_json(f"/repos/{repository}/releases/{release['id']}/assets?per_page=100&page={page}", token)
+            listed.extend(group)
+            if len(group) < 100:
+                break
+        release["assets"] = listed
     assets = [a for a in release["assets"] if a["name"] == asset_name]
-    if len(assets) != 1 or not asset_name.lower().endswith(".zip"):
-        raise ValueError("Select exactly one ZIP asset from this repository's input Release")
+    if not assets and asset_name == "test-inputs.zip":
+        asset_name = "test-inputs.json"
+        assets = [a for a in release["assets"] if a["name"] == asset_name]
+    if len(assets) != 1 or not asset_name.lower().endswith((".zip", ".json")):
+        raise ValueError("Select one ZIP or split-archive descriptor from this repository's input Release")
     asset = assets[0]
+    if asset_name.lower().endswith(".json"):
+        if asset["size"] > 1_000_000:
+            raise ValueError("Split-archive descriptor is too large")
+        descriptor_path = Path(destination).with_suffix(".json")
+        transfer_asset(repository, asset, descriptor_path)
+        descriptor = json.loads(descriptor_path.read_text(encoding="utf-8"))
+        parts = validate_parts(descriptor)
+        with Path(destination).open("xb") as combined:
+            for index, part in enumerate(parts):
+                matches = [a for a in release["assets"] if a["name"] == part["name"]]
+                if len(matches) != 1 or matches[0]["size"] != part["bytes"]:
+                    raise ValueError("A split input part is missing, duplicated, or has the wrong size")
+                temporary_part = Path(destination).with_suffix(f".part-{index}")
+                transfer_asset(repository, matches[0], temporary_part)
+                if c.sha256_file(temporary_part) != part["sha256"]:
+                    raise ValueError("Split input part checksum mismatch")
+                with temporary_part.open("rb") as stream:
+                    shutil.copyfileobj(stream, combined, 1024 * 1024)
+                temporary_part.unlink()
+        if (Path(destination).stat().st_size != descriptor["archive_bytes"] or
+                c.sha256_file(destination) != descriptor["archive_sha256"]):
+            raise ValueError("Reassembled input ZIP checksum or size mismatch")
+    else:
+        transfer_asset(repository, asset, destination)
+    return {"release_tag": tag, "asset_name": asset_name, "asset_id": asset["id"],
+            "archive_bytes": Path(destination).stat().st_size, "archive_sha256": c.sha256_file(destination)}
+
+
+def validate_parts(descriptor):
+    parts = descriptor.get("parts", [])
+    if (descriptor.get("schema") != 1 or not 1 <= len(parts) <= 1000 or
+            not 0 < descriptor.get("archive_bytes", 0) <= MAX_ARCHIVE or
+            not re.fullmatch(r"[0-9a-f]{64}", descriptor.get("archive_sha256", ""))):
+        raise ValueError("Invalid split-archive descriptor")
+    names = set()
+    for part in parts:
+        name = part.get("name", "")
+        if (not re.fullmatch(r"[A-Za-z0-9_.-]+", name) or name.casefold() in names or
+                not 0 < part.get("bytes", 0) <= 64 * 1024 * 1024 or
+                not re.fullmatch(r"[0-9a-f]{64}", part.get("sha256", ""))):
+            raise ValueError("Invalid split-archive part")
+        names.add(name.casefold())
+    if sum(part["bytes"] for part in parts) != descriptor["archive_bytes"]:
+        raise ValueError("Split input sizes do not add up")
+    return parts
+
+
+def transfer_asset(repository, asset, destination):
     if not 0 < asset["size"] <= MAX_ARCHIVE:
         raise ValueError("Input ZIP is empty or exceeds the archive size limit")
     url = urllib.parse.urlsplit(asset["browser_download_url"])
@@ -118,8 +177,6 @@ def download_input(repository, tag, asset_name, token, destination):
     digest = asset.get("digest")
     if digest and digest != "sha256:" + c.sha256_file(destination):
         raise ValueError("Release asset checksum mismatch")
-    return {"release_tag": tag, "asset_name": asset_name, "asset_id": asset["id"],
-            "archive_bytes": count, "archive_sha256": c.sha256_file(destination)}
 
 
 def package_results(work, destination, run_info):
